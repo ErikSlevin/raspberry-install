@@ -1,0 +1,9 @@
+# -----------------------------------------------------------
+# DOCKER-PI-1
+# -----------------------------------------------------------
+
+Host 10.0.0.20
+    HostName 10.0.0.20
+    User erik
+        IdentityFile C:\Users\erik\.ssh\docker-pi-1-id_ed25519
+        IdentitiesOnly yes    
