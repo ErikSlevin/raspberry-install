@@ -147,7 +147,7 @@ ssh erik@[STATISCHE IP vom Raspberry]
 # Boot Konfiguration sichern
 sudo mv /boot/{config.txt,config.txt.orig} -v
 
-# GPU Memory verringern,WLAN und Blutooth deaktivieren (hier einsehbar) 
+# GPU Memory verringern,WLAN und Blutooth deaktivieren  
 sudo nano /boot/config.txt
 
 ```
@@ -178,7 +178,7 @@ sudo groupadd ssh-users && sudo usermod -a -G ssh-users erik
 # SSH Konfig sichern
 sudo mv /etc/ssh/{sshd_config,sshd_config.orig} -v
 
-# SSH Konfig anpassen (hier einsehbar)
+# SSH Konfig anpassen 
 sudo nano /etc/ssh/sshd_config
 
 # SSH neustarten
