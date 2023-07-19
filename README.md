@@ -279,11 +279,13 @@ sudo pip3 install docker-compose
 ### Portainer Container bereitstellen
 ```console
 # Portainer als Container bereitstellen (GUI für Docker)
-sudo docker run -d -p 8000:8000 -p 9000:9443 --name portainer \
+docker run -d -p 9000:9443 --name portainer \
     --restart=always \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v portainer_data:/data \
-    cr.portainer.io/portainer/portainer-ce:latest
+    --label "com.centurylinklabs.watchtower.enable=true" \
+    portainer/portainer-ce:latest
+
 
 # Portainer Oberfläche
 # https:// [STATISCHE IP vom Raspberry]:9000
