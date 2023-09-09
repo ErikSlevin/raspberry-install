@@ -1,0 +1,179 @@
+#       $OpenBSD: sshd_config,v 1.103 2018/04/09 20:41:22 tj Exp $
+
+# This is the sshd server system-wide configuration file.  See
+# sshd_config(5) for more information.
+
+# This sshd was compiled with PATH=/usr/bin:/bin:/usr/sbin:/sbin
+
+# The strategy used for options in the default sshd_config shipped with
+# OpenSSH is to specify options with their default value where
+# possible, but leave them commented.  Uncommented options override the
+# default value.
+
+Include /etc/ssh/sshd_config.d/*.conf
+
+# SSH-Port auf 62253
+Port 62253
+
+# aktiviert das sicherer SSH Protocol 2
+Protocol 2
+
+# lässt nur IPv4 zu. !Kann angepasst werden - "any" (IPv4 & IPv6), "inet" (nur IPv4) oder "inet6" (nur IPv6).
+AddressFamily inet
+
+# Beschränkt den Zugang auf folgende Benutzer – !ACHTUNG bitte Namen anpassen.
+AllowUsers erik
+#ListenAddress 0.0.0.0
+#ListenAddress ::
+
+HostKey /etc/ssh/ssh_host_rsa_key
+#HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+
+# Gibt die verfügbaren MAC-Algorithmen (Message Authentication Code) an.
+KexAlgorithms curve25519-sha256@libssh.org
+
+# Gibt die zulässigen Verschlüsselungen an.
+MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-512
+
+# Gibt die verfügbaren KEX (Key Exchange)-Algorithmen an.
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com
+
+# Gibt die vom Server angebotenen Algorithmen für die Schlüsselsignatur des Hosts an.
+HostKeyAlgorithms ssh-ed25519-cert-v01@openssh.com,ssh-ed25519
+#RekeyLimit default none
+
+# stellt das LogLevel auf "INFO" und das SyslogFacility auf "AUTHPRIV".
+SyslogFacility AUTHPRIV
+LogLevel INFO
+
+# Anmeldezeitraum zur Authentifizierung !Kann angepasst werden.
+LoginGraceTime 30
+
+# Verhindert Konfigurationsfehler.
+StrictModes yes
+
+# Begrenzt die Authentifizierungsversuche !der Wert hier ist 3, kann angepasst werden.
+MaxAuthTries 3
+
+#MaxSessions 10
+
+# Erlaubt das anmelden mittels SSH-Schlüsselpaare.
+PubkeyAuthentication yes
+
+# Expect .ssh/authorized_keys2 to be disregarded by default in future.
+#AuthorizedKeysFile     .ssh/authorized_keys .ssh/authorized_keys2
+
+#AuthorizedPrincipalsFile none
+
+#AuthorizedKeysCommand none
+#AuthorizedKeysCommandUser nobody
+
+# Deaktiviert die hostbasierte Authentifizierung.
+HostbasedAuthentication no
+
+# Change to yes if you don't trust ~/.ssh/known_hosts for
+# HostbasedAuthentication
+#IgnoreUserKnownHosts no
+# Don't read the user's ~/.rhosts and ~/.shosts files
+
+# Gibt an, dass .rhosts- und .shosts-Dateien nicht verwendet werden.
+IgnoreRhosts yes
+
+# Verhindert das anmelden mittels Passwort.
+PasswordAuthentication no
+
+# Deaktiviert das einloggen mit leeren Passwörtern.
+PermitEmptyPasswords no
+
+# Change to yes to enable challenge-response passwords (beware issues with
+# some PAM modules and threads)
+ChallengeResponseAuthentication no
+
+# Deaktiviert die Kerberos-Authentifizierung.
+KerberosAuthentication no
+#KerberosOrLocalPasswd yes
+#KerberosTicketCleanup yes
+#KerberosGetAFSToken no
+
+# GSSAPI options
+GSSAPIAuthentication no
+#GSSAPICleanupCredentials yes
+#GSSAPIStrictAcceptorCheck yes
+#GSSAPIKeyExchange no
+
+# Set this to 'yes' to enable PAM authentication, account processing,
+# and session processing. If this is enabled, PAM authentication will
+# be allowed through the ChallengeResponseAuthentication and
+# PasswordAuthentication.  Depending on your PAM configuration,
+# PAM authentication via ChallengeResponseAuthentication may bypass
+# the setting of "PermitRootLogin without-password".
+# If you just want the PAM account and session checks to run without
+# PAM authentication, then enable this but set PasswordAuthentication
+# and ChallengeResponseAuthentication to 'no'.
+UsePAM yes
+
+# Deaktiviert die Agentenweiterleitung/-tunnelung.
+AllowAgentForwarding no
+
+# Deaktiviert die TCP-Weiterleitung/Tunneling.
+# Für Visual Studio Code Remote muss dieses AKTIVIERT sein .. 
+AllowTcpForwarding no
+
+# Deaktiviert das Remote-Port-Forwarding.
+GatewayPorts no
+
+# Deaktiviert die X11-Weiterleitung/Tunneling (GUI)
+X11Forwarding no
+#X11DisplayOffset 10
+#X11UseLocalhost yes
+#PermitTTY yes
+
+# Deaktiviert das Motd-Banner "Message of the Day".
+PrintMotd no
+
+# Zeigt das Datum und Uhrzeit der letzten Benutzeranmeldung an.
+PrintLastLog yes
+
+# Verhindert, dass die Verbindung zum Server unterbrochen wird.
+TCPKeepAlive yes
+
+# Deaktiviert die User Environment Files.
+PermitUserEnvironment no
+
+# Deaktiviert die Komprimierung und sorgt für mehr Sicherheit.
+Compression no
+
+# Beendet die Verbindung nach 30 Minuten Inaktivität - !Kann angepasst werden
+ClientAliveInterval 1800
+
+# Sendet 2 Mal eine ClientAlive-Nachricht bevor die Verbindung abbricht - !Kann angepasst werden.
+ClientAliveCountMax 2
+
+# Deaktiviert DSN-Lookup, dadurch wird die Verbindung schneller hergestellt.
+UseDNS no
+#PidFile /var/run/sshd.pid
+#MaxStartups 10:30:100
+
+# Deaktiviert die Weiterleitung von tun-Geräten bei SSH-Verbindugen.
+PermitTunnel no
+#ChrootDirectory none
+
+# Deaktiviert das SSH-Protokollbanner.
+VersionAddendum none
+
+# no default banner path
+Banner none
+
+# Allow client to pass locale environment variables
+AcceptEnv LANG LC_*
+
+# override default of no subsystems
+Subsystem       sftp    /usr/lib/openssh/sftp-server
+
+# Example of overriding settings on a per-user basis
+#Match User anoncvs
+#       X11Forwarding no
+#       AllowTcpForwarding no
+#       PermitTTY no
+#       ForceCommand cvs server

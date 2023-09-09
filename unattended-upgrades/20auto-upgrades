@@ -1,0 +1,13 @@
+# -----------------------------------------------------------
+# Konfigurationsdatei für automatische Updates
+# /etc/apt/apt.conf.d/20auto-upgrades
+# -----------------------------------------------------------
+
+# Tägliche aktualisierung
+APT::Periodic::Update-Package-Lists "1";
+
+# unattended-upgrades ist aktiviert
+APT::Periodic::Unattended-Upgrade "1";
+
+# Benachrichtigungen über automatische Updates
+Unattended-Upgrade::Mail "root";
