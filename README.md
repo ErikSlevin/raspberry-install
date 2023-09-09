@@ -1,5 +1,9 @@
-# raspberry-config
- This is my Raspyberry installation and configuration with raspbian and docker
+# Raspberry Installation
+
+| Datum | Beschreibung |
+|:----------:|--------------|
+| 13.01.2023 | Anleitung erstellt |
+| 09.09.2023 | Komplette Überarbeitung der Anleitung |
 
 ## Vorbereitungen
 1. Raspberry Pi Imager runterladen & installieren
@@ -10,81 +14,29 @@
 
 3. Raspberry Pi OS auf Medium schreiben
    - Raspberry Pi OS (other)
-   - Raspberry Pi OS Lite (32-bit)
+   - Raspberry Pi OS Lite (64-bit) (with no desktop enviroment)
    - SD-Karte: Externes Medium auswählen
+   - Einstellungen:
+       - SSH aktivieren
+       - Passwort und Benutzername setzen
+       - Spracheinstellungen festlegen
    - schreiben
 
-4. SSH Dienst aktivieren
-   - Medium trennen und neu verbinden
-   - Explorer öffnen
-   - neue (leere) Textdatei erstellen
-   - Dateiname: ssh (ohne .txt Endung)
-
-5. SSH Verbindung herstellen
+4. SSH Verbindung herstellen
     - Windows Terminal öffnen
-    - `ssh pi@[DYNAMISCHE IP vom Raspberry]`
-    - Passwort: `raspberry`
+    - `ssh username@[DYNAMISCHE IP vom Raspberry]`
 
 ## Grundkonfiguration
+``` shell
+# Paketquellen aktualisieren und updaten
+sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt autoclean -y
 
-### System aktualisieren
-```console
-# Paketlisten aktualisieren
-sudo apt update -y
- 
-# Pakete aktualisieren
-sudo apt upgrade -y
-```
+# Raspberry Hardwarekonfiguration ändern
+# Hier wird u.A. WLAN, BT, Audio sowie die HDMI Schnittstelle deaktiviert
+sudo nano /boot/config.txt
 
-### User
-```console
-# Neuen Benutzer anlegen
-sudo useradd -m erik -G sudo
-
-# Passwort vergeben
-sudo passwd erik
-
-# Standardbenutzer alle Rechte
-sudo usermod --lock --expiredate 1 pi
-
-# Benutzerwechsel
-su erik
-
-# Root Passwort festlegen
-sudo passwd root
-
-# SSH Verzeichnis erstellen
-mkdir ~/.ssh -v && touch ~/.ssh/authorized_keys
-
-# Neustarten
-sudo reboot
-
-# Neuverbinden
-ssh erik@[DYNAMISCHE IP vom Raspberry]
-```
-
-### Netzwerk
-* Konfigurationsdateien:
-  * [NetworkManager.conf](files/NetworkManager.conf)
-  * [interfaces](files/interfaces)
-  * [sysctl.conf](files/sysctl.conf
-  )
-
-```console
-# Network-Manager installieren
-sudo apt install network-manager -y
-
-# dhcpcd stoppen
-sudo systemctl stop dhcpcd.service
-
-# dhcpcd deaktivieren
-sudo systemctl disable dhcpcd.service
-
-# Network-Manager konfigurieren
-sudo nano /etc/NetworkManager/NetworkManager.conf
-
-# Statische IP vergeben
-sudo nano /etc/network/interfaces
+# Statische IP-Adresse konfigurieren
+sudo nano /etc/dhcpcd.conf
 
 # IPv6 deaktivieren
 sudo nano /etc/sysctl.conf
@@ -92,202 +44,208 @@ sudo nano /etc/sysctl.conf
 # SysCtl Konfig übernehmen
 sudo sysctl -p
 
-# Network-Manager neustarten
-sudo service NetworkManager restart
+# DCHP Dienst neustarten und Status überprüfen
+sudo systemctl restart dhcpcd.service
+sudo service dhcpcd status
 
-# Neustarten
-sudo reboot
+# Hostname ändern
+sudo nano /etc/hostname
 
-# Neuverbinden
-ssh erik@[STATISCHE IP vom Raspberry]
+# Hosts ändern
+sudo nano /etc/hosts
+
+# Locale einstellen
+sudo raspi-config nonint do_change_locale de_DE.UTF-8 UTF-8
+sudo raspi-config nonint do_change_locale de_DE.UTF-8
+
+# Timezone einstellen
+sudo raspi-config nonint do_change_timezone Europe/Berlin
 ```
+> [`config.txt`](files/Grundkonfiguration/config.txt)
+> [`dhcpcd.conf`](files/Grundkonfiguration/dhcpcd.conf)
+> [`sysctl.conf`](files/Grundkonfiguration/sysctl.conf)
+> [`hostname`](files/Grundkonfiguration/hostname)
+> [`hosts`](files/Grundkonfiguration/hosts)
 
-### Automatische Updates
-* Konfigurationsdateien:
-  * [50unattended-upgrades](files/50unattended-upgrades)
-  * [10periodic](files/10periodic)
+## Automatische Updates einrichten
+``` shell
+# unattended-upgrades installieren und konfigurieren
+sudo apt install unattended-upgrades -y
+sudo dpkg-reconfigure --priority=low unattended-upgrades
 
-```console
-# Automatische Updates aktivieren
-sudo apt install unattended-upgrades apt-config-auto-update -y
-sudo dpkg-reconfigure -plow unattended-upgrades
-
-# Automatische Updates Konfig Backup
-sudo mv /etc/apt/apt.conf.d/{50unattended-upgrades,50unattended-upgrades.orig} -v
-sudo mv /etc/apt/apt.conf.d/{10periodic,10periodic.orig} -v
-
-# Grundkonfiguration von unattend-upgrade
+# Konfigurationsdateien anpassen inkl. Push-Notification via Gotify
+# Der Notify-Container Gotify wird später noch eingerichtet
+sudo nano /etc/apt/apt.conf.d/20auto-upgrades
 sudo nano /etc/apt/apt.conf.d/50unattended-upgrades
 
-# Automatische Updates Wöchentlich
-sudo nano /etc/apt/apt.conf.d/10periodic
-```
+# Push-Benachrichtigung, wenn automatische Updates installiert wurden
+sudo mkdir ~/skripte -v
+sudo nano /home/erik/skripte/unattended-upgrades-notify.sh
+sudo chmod +x /home/erik/skripte/unattended-upgrades-notify.sh
 
-### Raspi-Config
-```console
-# Raspi-Konfig aufrufen und Änderungen vornehmen
-# System Options -> S4 Hostname -> [Neuer Host Name}
-# Localisation Options -> Locale -> de_DE.UTF-8 UTF-8 ->  de_DE.UTF-8
-# Localisation Options -> Timezone -> Europe -> Berlin
-# Advanced Options -> Expand Filesystem 
-sudo raspi-config
-
-# Neustarten
+# Neustart (zwingend erforderlich wegen SSH Konfiguration)
 sudo reboot
-
-# Neuverbinden
-ssh erik@[STATISCHE IP vom Raspberry]
 ```
+> [`20auto-upgrades`](files/unattended-upgrades/20auto-upgrades)
+> [`50unattended-upgrades`](files/unattended-upgrades/50unattended-upgrades)
+> [`unattended-upgrades-notify.sh`](files/unattended-upgrades/unattended-upgrades-notify.sh)
 
-### Hardware-Config
-* Konfigurationsdateien:
-  * [config.txt](files/config.txt)
+## SSH einrichten
 
-```console
-# Boot Konfiguration sichern
-sudo mv /boot/{config.txt,config.txt.orig} -v
+``` shell
+# SSH Backup erstellen 
+sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak -v
 
-# GPU Memory verringern,WLAN und Blutooth deaktivieren  
-sudo nano /boot/config.txt
+# zum root-User wechseln
+sudo su
 
-```
+# SSH Schlüssel löschen und neu generieren
+rm /etc/ssh/ssh_host_*
+ssh-keygen -t rsa -b 4096 -f /etc/ssh/ssh_host_rsa_key -N ""
+ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key -N ""
 
-### SSH-Config
+# entfernt kleine Diffie-Hellman-Module
+awk '$5 >= 3071' /etc/ssh/moduli > /etc/ssh/moduli.safe
+mv /etc/ssh/moduli.safe /etc/ssh/moduli
 
-* Konfigurationsdateien:
-  * [config](files/config)
-  * [sshd_config](files/sshd_config)
+# Beschränkt den Schlüsselaustausch auf (key exchange), Chiffrier- (cipher) und MAC-Algorithmen.
+nano /etc/ssh/sshd_config.d/ssh-audit_hardening.conf
 
-```console
-# SSH Schlüssel löschen
-sudo rm /etc/ssh/ssh_host_*
+# wechselt zum normalen Benutzer zurück.
+exit
 
-# SSH Schlüssel neu generieren
-sudo dpkg-reconfigure openssh-server
+# Generiert einen sicheren SSH-Key (ed25519) - mit y Bestätigen.
+sudo ssh-keygen -o -a 100 -t ed25519 -N "" -f /etc/ssh/ssh_host_ed25519_key -C "$(date '+%Y%m%d')-$(hostname -s)-ed25519_key"
 
-# Windows Terminal SSH Schlüssel erstellen und übertragen
-ssh-keygen -t ed25519 -C pi-docker-1 -> C:\Users\erik\.ssh\docker-pi-1-id_ed25519
-scp C:\Users\erik\.ssh\docker-pi-1-id_ed25519.pub erik@10.0.0.20:~/.ssh/authorized_keys
+# .ssh Ordner und authorized_keys erstellen
+mkdir ~/.ssh
+touch ~/.ssh/authorized_keys
 
-# Windows .ssh Konfigurationsdatei erstellen zum schnellen verbinden
-# neue Datei erstellen: C:\Users\erik\.ssh\config
+# Verschiebt den ssh_host_ed25519_key.pub nach authorized_keys.
+sudo cat /etc/ssh/ssh_host_ed25519_key.pub >> ~/.ssh/authorized_keys
 
-# SSH-Gruppe erstellen und Benutzer der SSH-Gruppe hinzufügen
-sudo groupadd ssh-users && sudo usermod -a -G ssh-users erik
+# Das .ssh-Verzeichnis für andere Benutzer und Gruppen das leserecht entziehen.
+chmod 700 ~/.ssh
 
-# SSH Konfig sichern
-sudo mv /etc/ssh/{sshd_config,sshd_config.orig} -v
+# Legt fest, dass die SSH-Schlüsselpaare nur gelesen werden können.
+sudo chmod 400 /etc/ssh/ssh_host_ed25519_key*
 
-# SSH Konfig anpassen 
+# Setzt den lokalen Benutzer als Besitzer des Public-Keys.
+chown $USER:$USER ~/.ssh/authorized_keys
+
+# zeigt den ssh_host_ed25519_key an.
+sudo cat /etc/ssh/ssh_host_ed25519_key >> $(date '+%Y%m%d')-$(hostname -s)-ed25519_key
+   # --> Windows -> in Datei speichern ODER scp pi-docker-1:~/*key C:\Users\erikw\.ssh\
+   # --> !! ACHTUNG ZEILENENDESEQUENZ LF, NICHT CRLF !!!
+   # --> Am besten in VSC öffnen und speichern 
+   # --> Dateiname: echo $(hostname)-$(date -I)
+
+# startet den SSH-Dienst neu
+service ssh restart
+
+# sshd_conf übernehmen 
 sudo nano /etc/ssh/sshd_config
 
-# SSH neustarten
-sudo systemctl restart ssh
-```
-### 2-Faktor Authentifizierung einrichten
-
-* Konfigurationsdateien:
-  * [config](files/config)
-  * [sshd_config](files/sshd_config)
-
-```console
-# Zwei-Faktor Authentifizierung installieren
-sudo apt install libpam-google-authenticator -y
-
-# Zwei-Faktor konfigurieren
-# 1. Frage: Yes (Secret Key EPCJ3HSQXXXXXXXXXXT472MNTE)
-# 2. Frage: Yes
-# 3. Frage: Yes
-# 4. Frage: No
-# 5. Frage: Yes
-google-authenticator
-		
-# PAM sichern
-sudo mv /etc/pam.d/{sshd,sshd.orig} -v
-
-# PAM Konfig anpassen
-sudo nano /etc/pam.d/sshd
-```
-
-### MOTD einrichten
-
-* Konfigurationsdateien:
-  * [issue.net](files/issue.net)
-  * [motd.sh](files/motd.sh)
-
-```console
-# Banner vor SSH Login anpassen
+# issue.net anpassen
 sudo nano /etc/issue.net
 
-# MOTD entfernen
-sudo rm /etc/motd  -v
+# MOTD löschen
+sudo rm /etc/motd
+sudo rm /etc/update-motd.d/10-uname
 
-# MOTD erstellen
-sudo nano /etc/profile.d/motd.sh
+# Gotify Benachrichtigung via SSH 
+sudo nano /opt/shell-login.sh
+sudo chmod 755 /opt/shell-login.sh
+echo "/opt/shell-login.sh" | sudo tee -a /etc/profile
 
-# Berechtigung und Besitzer ändern
-sudo chown root:root /etc/profile.d/motd.sh -v && sudo chmod +x /etc/profile.d/motd.sh -v
-
-# SSH neustarten
-sudo systemctl restart ssh
-
-# Windows Terminal NEUER Tab - neue SSH Verbindung testen - je nach dem was in der config eingestellt wurde
-Bsp.: ssh pi-docker-1
-ssh pi-docker-1
 ```
+> [`ssh-audit_hardening.conf`](files/ssh/ssh-audit_hardening.conf)
+> [`sshd_config`](files/ssh/sshd_config)
+> [`issue.net`](files/ssh/issue.net)
+> [`motd`](files/ssh/motd)
+> [`shell-login.sh`](files/ssh/shell-login.sh)
 
-### Firewall einrichten
+## Firewall unf Fail2Bann einrichten
+``` shell
+# UFW installieren
+sudo apt install ufw -y && sudo apt autoclean -y && sudo apt autoremove -y
 
-* Konfigurationsdateien:
-  * [issue.net](files/jail.local)
+# eingehende Verbindungen werden abgelehnt und ausgehende Verbindungen zugelassen.
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
 
-```console
-# Firewall installieren
-sudo apt update -y && sudo apt install fail2ban -y
+# SSH Verbindungen zulassen
+# ACHTUNG: bitte SSH-Port-Nummer anpassen
+sudo ufw allow 62253
 
-# Firewall Konfig erstellen
-sudo nano /etc/fail2ban/jail.local
+# UFW aktivieren - mit y bestätigen
+sudo ufw enable
 
-# Firewall neustarten
+# installiert die neueste Fail2ban Version
+sudo apt install fail2ban -y -y && sudo apt autoclean -y && sudo apt autoremove -y
+
+# erstellt eine Kopie der Konfigurationsdatei.
+sudo cp /etc/fail2ban/jail.{conf,local} -v
+
+# [sshd] Jail konfigurieren
+# Zeilennummer vom sshd-Jail in Variable speichern
+i=$(grep -n '\[sshd\]' /etc/fail2ban/jail.local | awk 'NR==2 {print}' | cut -d ':' -f 1 | awk '{print $1 + 1}')
+
+# Grundeinstellungen vom Jail entfernen
+sed -i "${i},$((i+7))d" /etc/fail2ban/jail.local
+
+# Neue Einstellungen für den Jail hinzufügen
+# Folgende Einstellungen werden mit dem echo-Befehl hinzugefügt:
+# Wenn Änderungen gewünscht (z.B. SSH-Port) dann bitte den echo befehl anpassen,
+# nicht die untenstehenden Kommentarzeilen!
+# enabled = true		port = 62253	logpath = %(sshd_log)s	bantime = 2h	
+# backend = %(sshd_backend)s	maxretry = 3	ignoreip = 127.0.0.1/8	findtime = 1d
+echo -e "enabled = true\nport = 62253\nlogpath = %(sshd_log)s\nbackend = %(sshd_backend)s" \
+	"\nmaxretry = 3\nfindtime = 1d\nbantime = 2h\nignoreip = 127.0.0.1/8" | \
+	 sed -i "${i}r /dev/stdin" /etc/fail2ban/jail.local
+
+# Fail2ban neu starten.
 sudo service fail2ban restart
+
+# Fail2ban nach Reboot automatisch starten
+sudo systemctl enable fail2ban
 ```
+> [`20auto-upgrades`](files/unattended-upgrades/20auto-upgrades)
+> [`50unattended-upgrades`](files/unattended-upgrades/50unattended-upgrades)
+> [`unattended-upgrades-notify.sh`](files/unattended-upgrades/unattended-upgrades-notify.sh)
 
-### Docker Installation
-```console
-# Docker herrunterladen
-curl -fsSL https://get.docker.com -o ~/get-docker.sh
-
+## Docker und Portainer
+``` shell
 # Docker installieren
-sudo sh ~/get-docker.sh
+sudo mkdir ~/docker_files -v
+sudo curl -fsSL https://get.docker.com -o get-docker.sh &&  sudo sh get-docker.sh 
+sudo rm get-docker.sh
+sudo groupadd docker
+sudo usermod -aG docker $USER
 
-# Docker in Benutzergruppe aufnehmen
-sudo usermod -aG docker erik
+# Neustart zwingend durch führen!
+sudo reboot
 
-# Docker beim Systemstart ausführen
-sudo systemctl enable docker.service && sudo systemctl enable containerd.service
-```
+# Docker Netzwerke erstellen
+docker network create --subnet=10.0.10.0/24 --gateway=10.0.10.1 intern
+docker network create --subnet=10.0.20.0/24 --gateway=10.0.20.1 extern
 
-### Docker-Compose Installation
-```console
-# Docker-Compose Abhängigkeiten Installieren
-sudo apt install libffi-dev libssl-dev python3-dev python3 python3-pip -y
-
-# Docker-Compose installieren
-sudo pip3 install docker-compose
-```
-
-### Portainer Container bereitstellen
-```console
-# Portainer als Container bereitstellen (GUI für Docker)
+# Portainer deployen
 docker run -d -p 9000:9443 --name portainer \
-    --restart=always \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    -v portainer_data:/data \
-    --label "com.centurylinklabs.watchtower.enable=true" \
-    portainer/portainer-ce:latest
-
-
-# Portainer Oberfläche
-# https:// [STATISCHE IP vom Raspberry]:9000
+	--restart=always \
+	-v /var/run/docker.sock:/var/run/docker.sock \
+	-v portainer:/data \
+	--label "com.centurylinklabs.watchtower.enable=true" \
+	--network intern \
+	portainer/portainer-ce:latest
 ```
+
+## Quellen
+- [*How to Configure Static IP Address on Raspberry Pi*](https://sleeplessbeastie.eu/2022/05/23/how-to-configure-static-ip-address-on-raspberry-pi/)
+- [*Raspberry Pi: Internes WLAN und Bluetooth deaktivieren*](https://www.xgadget.de/anleitung/raspberry-pi-internes-wlan-und-bluetooth-deaktivieren/)
+- [*YouTube: How to protect Linux from Hackers // My server security strategy!*](https://www.youtube.com/watch?v=Bx_HkLVBz9M&t=393s)
+- [*How To Harden OpenSSH on Ubuntu 18.04*](https://www.digitalocean.com/community/tutorials/how-to-harden-openssh-on-ubuntu-18-04-de)
+- [*OpenSSH Server härten und absichern unter Linux*](https://sakis.tech/openssh-server-abhaerten-und-absichern-unter-linux/)
+- [*SSH Audit Hardening Guides*](https://www.sshaudit.com/hardening_guides.html)
+- [*Absicherung eines Debian Servers*](https://www.thomas-krenn.com/de/wiki/Absicherung_eines_Debian_Servers)
 
