@@ -6,7 +6,7 @@
 #!/bin/bash
 
 # Gotify Server URL und API-Token
-GOTIFY_URL="https://gotify.erikslevin.de"
+GOTIFY_URL="https://gotify.yourdomain.de"
 API_TOKEN="your-api-token"
 
 # Hostname speichern
