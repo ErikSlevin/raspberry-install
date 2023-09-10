@@ -7,13 +7,17 @@
 
 # Gotify Server URL und API-Token
 GOTIFY_URL="https://gotify.yourdomain.de"
-API_TOKEN="your-api-token"
+API_TOKEN="yourtoken"
 
 # Hostname speichern
 HOSTNAME=$(hostname)
 
+TITLE="Unattended-Upgrades"
+MESSAGE="Automatische Aktualisierung durch Unattended-Upgrades auf $HOSTNAME"
+PRIORITY=5
+
 # Nachricht an Gotify senden
-curl -X POST "$GOTIFY_URL/message" \
-  -F "token=$API_TOKEN" \
-  -F "title=Update auf $HOSTNAME durchgeführt" \
-  -F "message=Unattended-Upgrades hat ein Update installiert."
+curl -X POST "$GOTIFY_URL/message?token=$API_TOKEN" \
+  -F "title=$TITLE" \
+  -F "message=$MESSAGE" \
+  -F "priority=5"

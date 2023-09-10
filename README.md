@@ -156,7 +156,7 @@ sudo rm /etc/update-motd.d/10-uname
 # Gotify Benachrichtigung via SSH 
 sudo nano /opt/shell-login.sh
 sudo chmod 755 /opt/shell-login.sh
-echo "/opt/shell-login.sh" | sudo tee -a /etc/profile
+echo "/opt/shell-login.sh > /dev/null 2>&1" | sudo tee -a /etc/profile
 
 ```
 > [`ssh-audit_hardening.conf`](files/ssh/ssh-audit_hardening.conf)

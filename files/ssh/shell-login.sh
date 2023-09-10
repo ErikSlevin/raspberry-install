@@ -12,8 +12,12 @@ API_TOKEN="your-api-token"
 # Hostname speichern
 HOSTNAME=$(hostname)
 
+TITLE="SSH-Login $USER"
+MESSAGE="Login auf $(hostname) am $(date +%Y-%m-%d) um $(date +%H:%M)"
+PRIORITY=5
+
 # Nachricht an Gotify senden
-curl -X POST "$GOTIFY_URL/message" \
-  -F "token=$API_TOKEN" \
-  -F "title=SSH-Login $USER" \
-  -F "message=Login auf $(hostname) am $(date +%Y-%m-%d) um $(date +%H:%M)"
+curl -X POST "$GOTIFY_URL/message?token=$API_TOKEN" \
+  -F "title=$TITLE" \
+  -F "message=$MESSAGE" \
+  -F "priority=10"
