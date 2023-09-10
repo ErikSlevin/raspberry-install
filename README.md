@@ -60,6 +60,9 @@ sudo raspi-config nonint do_change_locale de_DE.UTF-8
 
 # Timezone einstellen
 sudo raspi-config nonint do_change_timezone Europe/Berlin
+
+# Neustart
+sudo reboot
 ```
 > [`config.txt`](files/Grundkonfiguration/config.txt)
 > [`dhcpcd.conf`](files/Grundkonfiguration/dhcpcd.conf)
