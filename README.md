@@ -144,7 +144,7 @@ sudo cat /etc/ssh/ssh_host_ed25519_key >> $(date '+%Y%m%d')-$(hostname -s)-ed255
    # --> Dateiname: echo $(hostname)-$(date -I)
 
 # startet den SSH-Dienst neu
-service ssh restart
+sudo service ssh restart
 
 # sshd_conf übernehmen 
 sudo nano /etc/ssh/sshd_config
@@ -190,12 +190,15 @@ sudo apt install fail2ban -y -y && sudo apt autoclean -y && sudo apt autoremove 
 # erstellt eine Kopie der Konfigurationsdatei.
 sudo cp /etc/fail2ban/jail.{conf,local} -v
 
+# zum root-User wechseln
+sudo su
+
 # [sshd] Jail konfigurieren
 # Zeilennummer vom sshd-Jail in Variable speichern
 i=$(grep -n '\[sshd\]' /etc/fail2ban/jail.local | awk 'NR==2 {print}' | cut -d ':' -f 1 | awk '{print $1 + 1}')
 
 # Grundeinstellungen vom Jail entfernen
-sed -i "${i},$((i+7))d" /etc/fail2ban/jail.local
+sudo sed -i "${i},$((i+7))d" /etc/fail2ban/jail.local
 
 # Neue Einstellungen für den Jail hinzufügen
 # Folgende Einstellungen werden mit dem echo-Befehl hinzugefügt:
@@ -206,6 +209,9 @@ sed -i "${i},$((i+7))d" /etc/fail2ban/jail.local
 echo -e "enabled = true\nport = 62253\nlogpath = %(sshd_log)s\nbackend = %(sshd_backend)s" \
 	"\nmaxretry = 3\nfindtime = 1d\nbantime = 2h\nignoreip = 127.0.0.1/8" | \
 	 sed -i "${i}r /dev/stdin" /etc/fail2ban/jail.local
+
+# wechselt zum normalen Benutzer zurück.
+exit
 
 # Fail2ban neu starten.
 sudo service fail2ban restart
