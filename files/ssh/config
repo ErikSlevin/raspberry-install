@@ -1,0 +1,14 @@
+# -----------------------------------------------------------
+# SSH-Konfigurationsdatei / Profildatei
+# ~/.ssh/config
+# -----------------------------------------------------------
+
+Host pi-docker-1
+  HostName 10.0.0.20
+  User erik
+  Port 62253
+
+Host pi-docker-2
+  HostName 10.0.0.21
+  User erik
+  Port 62253
