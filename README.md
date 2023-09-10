@@ -122,7 +122,7 @@ sudo ssh-keygen -o -a 100 -t ed25519 -N "" -f /etc/ssh/ssh_host_ed25519_key -C "
 
 # .ssh Ordner und authorized_keys erstellen
 mkdir ~/.ssh
-touch ~/.ssh/authorized_keys
+touch ~/.ssh/{authorized_keys,config}
 
 # Verschiebt den ssh_host_ed25519_key.pub nach authorized_keys.
 sudo cat /etc/ssh/ssh_host_ed25519_key.pub >> ~/.ssh/authorized_keys
@@ -135,6 +135,9 @@ sudo chmod 400 /etc/ssh/ssh_host_ed25519_key*
 
 # Setzt den lokalen Benutzer als Besitzer des Public-Keys.
 chown $USER:$USER ~/.ssh/authorized_keys
+
+# Platzhalter erstellen für zukünfige Server zu Server Verbindungen etc.
+sudo nano ~/.ssh/config
 
 # zeigt den ssh_host_ed25519_key an.
 sudo cat /etc/ssh/ssh_host_ed25519_key >> $(date '+%Y%m%d')-$(hostname -s)-ed25519_key
@@ -163,6 +166,7 @@ echo "/opt/shell-login.sh > /dev/null 2>&1" | sudo tee -a /etc/profile
 
 ```
 > [`ssh-audit_hardening.conf`](files/ssh/ssh-audit_hardening.conf)
+> [`config`](files/ssh/config)
 > [`sshd_config`](files/ssh/sshd_config)
 > [`issue.net`](files/ssh/issue.net)
 > [`motd`](files/ssh/motd)
@@ -179,7 +183,7 @@ sudo ufw default allow outgoing
 
 # SSH Verbindungen zulassen
 # ACHTUNG: bitte SSH-Port-Nummer anpassen
-sudo ufw allow 62253
+sudo ufw allow 62253 comment "ssh"
 
 # UFW aktivieren - mit y bestätigen
 sudo ufw enable
@@ -248,8 +252,8 @@ docker run -d -p 9000:9443 --name portainer \
 	--network intern \
 	portainer/portainer-ce:latest
 
-# OPTIONAL !
-# Weitere Docker-Hosts via Portainer Agent hinzufügen
+###################### OPTIONAL ###########################
+### Weitere Docker-Hosts via Portainer Agent hinzufügen ###
 
 docker run -d \
   -p 9001:9001 \
@@ -260,7 +264,34 @@ docker run -d \
   --label "com.centurylinklabs.watchtower.enable=true" \
   --network intern \
   portainer/agent:latest
+
 ```
+
+## Optional: Server Schlüsselpare austauschen
+
+```console
+# 1. Schlüssel vom Server 1 (pi-docker-1) dem Server 2 (pi-docker-2) mitteilen
+scp C:\Users\erik/.ssh/20230910-pi-docker-1-ed25519_key pi-docker-1:~/.ssh/20230910-pi-docker-2-ed25519_key
+
+# 2. Auf Server 2 Schlüsseldatei die richtigen Berechtigungen geben
+sudo chmod 600 ~/.ssh/20230910-pi-docker-2-ed25519_key
+
+# 3. SSH-Agenten starten
+eval "$(ssh-agent -s)"
+
+# 4. Schlüssel hinzufügen via ssh-add
+ssh-add 20230910-pi-docker-1-ed25519_key
+
+# Ausgabe: Identity added: 20230910-pi-docker-1-ed25519_key (20230910-pi-docker-1-ed25519_key)
+
+# 5. SSH-Profil anpassen
+sudo nano ~/.ssh/config
+
+# Zukünftig kann man via ssh pi-docker-1 eine Verbindung herstellen oder via scp docker-pi-1 Dateien senden
+
+```
+
+> [`config`](files/ssh/config)
 
 ## Quellen
 - [*How to Configure Static IP Address on Raspberry Pi*](https://sleeplessbeastie.eu/2022/05/23/how-to-configure-static-ip-address-on-raspberry-pi/)
